@@ -41,6 +41,15 @@ def get_sprite(c):
 def main(stdscr):
     curses.curs_set(0)
     sh, sw = stdscr.getmaxyx()
+
+    while sh <= 40 or sw <= 40:
+        curses.resize_term(0,0)
+        stdscr.clear()
+        sh, sw = stdscr.getmaxyx()
+        stdscr.addstr(0, 0, "Please increase screensize to at least 40x40, current %s %s"% (sh, sw))
+        stdscr.refresh()
+        time.sleep(0.5)
+
     margin = 3
     boxes = [
         get_box(1, 11, 1, 11)
@@ -62,6 +71,7 @@ def main(stdscr):
         stdscr.clear()
         for line in lines:
             for x, y in line:
+                print(x, y)
                 stdscr.addstr(y, x, "#")
         
         box = [[y1, x1], [y2, x2]]
@@ -80,7 +90,8 @@ def main(stdscr):
         #         stdscr.addstr(y, x, "*")
 
         stdscr.refresh()
-        time.sleep(0.05)
+        time.sleep(0.5)
+
     # stdscr.getch()
     # for i in range(10):
         # time.sleep(1)
