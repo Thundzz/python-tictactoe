@@ -5,17 +5,10 @@ import random
 from itertools import product
 
 def get_vline(x, ylim1, ylim2):
-    return [(x, i) for i in range(ylim1, ylim2)]
+    return [(x, i) for i in range(ylim1, ylim2+1)]
 
 def get_hline(x, ylim1, ylim2):
-    return [(i, x) for i in range(ylim1, ylim2)]
-
-def get_box(x_coord, x_coord2, y_coord, y_coord2):
-    pixels = []
-    for x in range(x_coord, x_coord2):
-        for y in range(y_coord, y_coord2):
-            pixels.append((x, y))
-    return pixels
+    return [(i, x) for i in range(ylim1, ylim2+1)]
 
 def get_sprite(c):
     if c == "o":
@@ -28,7 +21,7 @@ def get_sprite(c):
             "0     0",
             "0000000",
         ]
-    else:
+    elif c == "x":
         return [
             "X     x",
             " X   X ",
@@ -38,63 +31,73 @@ def get_sprite(c):
             " X   X ",
             "X     x"
         ]
+    elif c == "cursor":
+        return [
+            r"%%%%%%%%%",
+            r"%       %",
+            r"%       %",
+            r"%       %",
+            r"%       %",
+            r"%       %",
+            r"%       %",
+            r"%       %",
+            r"%%%%%%%%%",
+        ]
+    else:
+        raise Exception(f"Could not find sprite for symbol {c}")
+
+def draw_grid(stdscr):
+    lines = [
+        get_vline(0, 0, 30),
+        get_vline(10, 0, 30),
+        get_vline(20, 0, 30),
+        get_vline(30, 0, 30),
+        get_hline(0, 0, 30),
+        get_hline(10, 0, 30),
+        get_hline(20, 0, 30),
+        get_hline(30, 0, 30)
+    ]
+    for line in lines:
+        for x, y in line:
+            print(x, y)
+            stdscr.addstr(y, x, "#")
+
+def draw_symbol(stdscr, c, x, y):
+    symbol = get_sprite(c)
+    for idx, line in enumerate(symbol):
+        stdscr.addstr(y+idx, x, line)
+
 def main(stdscr):
     curses.curs_set(0)
     sh, sw = stdscr.getmaxyx()
 
     while sh <= 40 or sw <= 40:
-        curses.resize_term(0,0)
+        curses.resize_term(100,100)
         stdscr.clear()
         sh, sw = stdscr.getmaxyx()
         stdscr.addstr(0, 0, "Please increase screensize to at least 40x40, current %s %s"% (sh, sw))
         stdscr.refresh()
         time.sleep(0.5)
 
-    margin = 3
-    boxes = [
-        get_box(1, 11, 1, 11)
-    ]
-
-    x1 = 0
-    y1 = 0
-    x2 = 33
-    y2 = 33
-    
-    lines = [
-        get_vline(12, 1, 34),
-        get_vline(23, 1, 34),
-        get_hline(12, 1, 34),
-        get_hline(23, 1, 34)
-    ]
-
     while True:
         stdscr.clear()
-        for line in lines:
-            for x, y in line:
-                print(x, y)
-                stdscr.addstr(y, x, "#")
         
-        box = [[y1, x1], [y2, x2]]
-        o_symbol = get_sprite("o")
-        x_symbol = get_sprite("x")
+        draw_grid(stdscr)
+        # draw_symbol(stdscr, "cursor", 1, 1)
 
-        positions = product([3, 14, 25], repeat=2)
+        positions = product([1, 11, 21], repeat=2)
+        # for xc, yc in positions:
+        xc, yc = random.choice(list(positions))
+        draw_symbol(stdscr, "cursor", xc, yc)
+
+        positions = product([2, 12, 22], repeat=2)
         for xo, yo in positions:
-            symbol = random.choice([o_symbol, x_symbol])
-            for idx, line in enumerate(symbol):
-                stdscr.addstr(yo+idx, xo, line)
-        # print(box)
-        # time.sleep(2)
-        # for box in boxes:
-        #     for x, y in box:
-        #         stdscr.addstr(y, x, "*")
+            symbol = random.choice(["o", "x"])
+            draw_symbol(stdscr, symbol, xo, yo)
 
         stdscr.refresh()
         time.sleep(0.5)
 
-    # stdscr.getch()
-    # for i in range(10):
-        # time.sleep(1)
 
 if __name__ == '__main__':
     curses.wrapper(main)

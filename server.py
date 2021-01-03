@@ -10,11 +10,11 @@ class ClientHandler:
         self.data = []
         self.messages = []
         self.conn = None
+        self.running = True
 
     def run(self, conn, addr):
-        print("hi")
         self.conn = conn
-        while True:
+        while self.running:
             # print(f"Received {len(self.data)} bytes from client")
             dt = conn.recv(4096)
             self.data.extend(list(dt))
@@ -31,6 +31,7 @@ class ClientHandler:
                 self.state = "HEADER"
 
     def stop(self):
+        self.running = False
         if self.conn:
             self.conn.close()
 
@@ -63,7 +64,6 @@ class ServerListener:
             self.client_handler.stop()
 
         if self.client_thread:
-            self.client_thread.stop()
             self.client_thread.join()
 
         if self.socket:
@@ -79,7 +79,7 @@ if __name__ == '__main__':
             msgs = server.get_messages()
             if msgs:
                 print(msgs)
-            time.sleep(0.01)
+            time.sleep(0.5)
             # print(msg)
     finally:
         server.stop()
