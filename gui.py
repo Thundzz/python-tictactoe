@@ -60,7 +60,7 @@ class CursesInterface:
                 # print(x, y)
                 self.stdscr.addstr(y, x, "#")
 
-    def draw_symbol(self, stdscr, c, x, y):
+    def draw_symbol(self, c, x, y):
         mapping = self.cursors_b2s if c == "cursor" else self.sprite_b2s
 
         sx, sy = mapping[(x, y)]
@@ -154,12 +154,12 @@ def main(stdscr):
         if yc < 0:
             yc = 0
 
-        gui.draw_symbol(stdscr, "cursor", xc, yc)
+        gui.draw_symbol("cursor", xc, yc)
         positions = product(range(3), repeat=2)
 
         for idx, (xo, yo) in enumerate(positions):
             symbol = random.choice(["o", "x"])
-            gui.draw_symbol(stdscr, symbols[idx], xo, yo)
+            gui.draw_symbol(symbols[idx], xo, yo)
 
         events = inpt.poll_events()
         gui.refresh()
