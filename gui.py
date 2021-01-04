@@ -45,17 +45,21 @@ class CursesInterface:
         for idx, message in enumerate(messages):
             self.stdscr.addstr(x0+idx, y0, message)
 
-    def display_menu(self, title, entries, selected_index):
-        self.stdscr.addstr(5, 30, title)
+    def display_menu(self, title, subtitle, entries, selected_index):
+        _, sw = self.stdscr.getmaxyx()
+        self.stdscr.addstr(5, sw//2 - len(title) // 2, title)
+        subtitle_chunks = subtitle.split("\n")
+        for idx, chunk in enumerate(subtitle_chunks):
+            self.stdscr.addstr(8 + idx, sw//2 - len(chunk) // 2, chunk)
 
         for idx, entry in enumerate(entries):
             color_pair_id = self.color_pairs["highlighted"] if idx == selected_index else self.color_pairs["default"]
             cp = curses.color_pair(color_pair_id)
-            self.stdscr.addstr(idx + 10, 30, entry, cp)
+            self.stdscr.addstr(idx + 15, 12, entry, cp)
 
-    def display_server_ip(self, ip, port):
-        self.stdscr.addstr(20, 30, "Server IP: " + ip)
-        self.stdscr.addstr(21, 30, "Server Port: " + port)
+    def display_server_ip(self, ip):
+        self.stdscr.addstr(16, 45, "Server IP: " + ip)
+        # self.stdscr.addstr(12, 40, "Server Port: " + port)
 
     def draw_grid(self):
         lines = [
