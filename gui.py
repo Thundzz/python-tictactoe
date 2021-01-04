@@ -9,21 +9,23 @@ class CursesInterface:
     def __init__(self, stdscr):
         self.stdscr = stdscr
         curs_pos = list(product(enumerate([1, 11, 21]), repeat=2))
-        self.cursors_b2s = { 
-            (boardX, boardY) : (screenX, screenY)  
+        self.cursors_b2s = {
+            (boardX, boardY) : (screenX, screenY)
             for (boardX, screenX), (boardY, screenY) in curs_pos
         }
 
         sprite_pos = list(product(enumerate([2, 12, 22]), repeat=2))
-        self.sprite_b2s = { 
-            (boardX, boardY) : (screenX, screenY)  
+        self.sprite_b2s = {
+            (boardX, boardY) : (screenX, screenY)
             for (boardX, screenX), (boardY, screenY) in sprite_pos
         }
-
+        self.default_cp = curses.init_pair(1, curses.COLOR_WHITE, curses.COLOR_BLACK)
+        self.highlighted_cp = curses.init_pair(2, curses.COLOR_BLACK, curses.COLOR_WHITE)
+        self.color_pairs = { "default": 1, "highlighted" : 2 }
 
     def initialize(self):
+        curses.curs_set(0)
         sh, sw = self.stdscr.getmaxyx()
-
         while sh <= 40 or sw <= 40:
             curses.resize_term(100,100)
             self.stdscr.clear()
@@ -43,6 +45,17 @@ class CursesInterface:
         for idx, message in enumerate(messages):
             self.stdscr.addstr(x0+idx, y0, message)
 
+    def display_menu(self, title, entries, selected_index):
+        self.stdscr.addstr(5, 30, title)
+
+        for idx, entry in enumerate(entries):
+            color_pair_id = self.color_pairs["highlighted"] if idx == selected_index else self.color_pairs["default"]
+            cp = curses.color_pair(color_pair_id)
+            self.stdscr.addstr(idx + 10, 30, entry, cp)
+
+    def display_server_ip(self, ip, port):
+        self.stdscr.addstr(20, 30, "Server IP: " + ip)
+        self.stdscr.addstr(21, 30, "Server Port: " + port)
 
     def draw_grid(self):
         lines = [
@@ -112,60 +125,4 @@ class CursesInterface:
     @staticmethod
     def __get_hline(x, ylim1, ylim2):
         return [(i, x) for i in range(ylim1, ylim2+1)]
-
-def main(stdscr):
-    curses.curs_set(0)
-
-    gui = CursesInterface(stdscr)
-    inpt = Input(stdscr, 0)
-
-    gui.initialize()
-    inpt.initialize()
-
-    xc, yc = 0, 0
-    events = []
-    symbols = random.sample(9*["o", "x"], 9)
-    while True:
-        gui.clear()
-        gui.draw_grid()
-
-        messages = map(chr, events)
-
-        # gui.display_messages(messages)
-
-        # positions = product(range(3), repeat=2)
-        # xc, yc = random.choice(list(positions))
-
-        for event in events:
-            if event == curses.KEY_UP:
-                yc -= 1
-            if event == curses.KEY_DOWN:
-                yc += 1
-            if event == curses.KEY_RIGHT:
-                xc += 1
-            if event == curses.KEY_LEFT:
-                xc -= 1
-        if xc > 2:
-            xc = 2
-        if xc < 0:
-            xc = 0
-        if yc > 2:
-            yc = 2
-        if yc < 0:
-            yc = 0
-
-        gui.draw_symbol("cursor", xc, yc)
-        positions = product(range(3), repeat=2)
-
-        for idx, (xo, yo) in enumerate(positions):
-            symbol = random.choice(["o", "x"])
-            gui.draw_symbol(symbols[idx], xo, yo)
-
-        events = inpt.poll_events()
-        gui.refresh()
-        time.sleep(0.05)
-
-if __name__ == '__main__':
-    curses.wrapper(main)
-
 
