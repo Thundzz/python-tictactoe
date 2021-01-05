@@ -3,7 +3,9 @@ from input import Input
 from game import Game
 from menu import MenuScreen
 import curses
+import sys
 import time
+from server import Client, Server
 
 def render_game(gui, game):
     gui.draw_symbol("cursor", game.xc, game.yc)
@@ -41,12 +43,25 @@ def main(stdscr):
         gui.refresh()
         time.sleep(0.1)
 
+    if menu.current_idx == 2:
+        conn = Server()
+    else:
+        conn = Client(menu.get_server_ip_str())
+
+    conn.start()
+
     while not game.finished:
         events = inpt.poll_events()
+        conn.send_messages([str(e) for e in events])
+        rcvd = conn.get_messages()
+        events = events + [int(e) for e in rcvd]
+
         gui.clear()
         game.update(events)
         render_game(gui, game)
         time.sleep(0.1)
+
+    conn.stop()
 
     while True:
         events = inpt.poll_events()

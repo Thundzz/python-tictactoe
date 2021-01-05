@@ -1,7 +1,7 @@
 import socket
 import threading
 import time
-
+import select
 
 class ConnectionHandler:
     def __init__(self):
@@ -11,29 +11,33 @@ class ConnectionHandler:
         self.messages = []
         self.conn = None
         self.running = True
+        self.select_timeout = 0.016
 
     def run(self, conn):
         self.conn = conn
+        self.conn.setblocking(False)
+        # self.conn.setdefaulttimeout(0)
         while self.running:
             # print(f"Received {len(self.data)} bytes from client")
-            dt = conn.recv(4096)
-            self.data.extend(list(dt))
-            """
-            This is very ugly, but basically, we need to continue decoding while we are making progress.
-            Looping a bunch of time should do in most cases >___<'
-            """
-            for i in range(100):
-                if len(self.data) >= self.header_size and self.state == "HEADER":
-                    self.current_data_size = int(bytes(self.data[:self.header_size]).decode("ascii"))
-                    self.data = self.data[self.header_size:]
-                    self.state = "DATA"
+            readable, _, _ = select.select([self.conn], [], [], self.select_timeout)
+            for conn in readable:
+                try:
+                    dt = conn.recv(4096)
+                    self.data.extend(list(dt))
+                except:
+                    pass
 
-                if self.state == "DATA" and len(self.data) >= self.current_data_size:
-                    msg = bytes(self.data[:self.current_data_size]).decode("ascii")
-                    self.messages.append(msg)
-                    self.data = self.data[self.current_data_size:]
-                    self.current_data_size = None
-                    self.state = "HEADER"
+            if len(self.data) >= self.header_size and self.state == "HEADER":
+                self.current_data_size = int(bytes(self.data[:self.header_size]).decode("ascii"))
+                self.data = self.data[self.header_size:]
+                self.state = "DATA"
+
+            if self.state == "DATA" and len(self.data) >= self.current_data_size:
+                msg = bytes(self.data[:self.current_data_size]).decode("ascii")
+                self.messages.append(msg)
+                self.data = self.data[self.current_data_size:]
+                self.current_data_size = None
+                self.state = "HEADER"
 
     def stop(self):
         self.running = False
@@ -59,15 +63,16 @@ class Server:
 
     def start(self):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket.bind(("0.0.0.0",9000))
+        self.socket.bind(("0.0.0.0", 9000))
         self.socket.listen(1)
-        print("Listening to incoming ")
+        # print("Listening to incoming ")
         conn, addr = self.socket.accept()
         self.connection_handler = ConnectionHandler()
         thread = threading.Thread(target=self.connection_handler.run, args=[conn])
         self.connection_thread = thread
         thread.start()
-        # self.socket.close()
+        self.socket.close()
+        self.socket = None
 
     def get_messages(self):
         messages = []
@@ -75,6 +80,9 @@ class Server:
             messages.append(self.connection_handler.messages.pop(0))
 
         return messages
+
+    def send_messages(self, msgs):
+        self.connection_handler.send_messages(msgs)
 
     def stop(self):
         if self.connection_handler:
@@ -99,12 +107,22 @@ class Client:
         self.connection_thread = thread
         thread.start()
 
+    def get_messages(self):
+        messages = []
+        while self.connection_handler.messages:
+            messages.append(self.connection_handler.messages.pop(0))
+
+        return messages
+
     def send_messages(self, msgs):
         self.connection_handler.send_messages(msgs)
 
     def stop(self):
-        if self.conn:
-            self.conn.close()
+        if self.connection_handler:
+            self.connection_handler.stop()
+
+        if self.connection_thread:
+            self.connection_thread.join()
 
 if __name__ == '__main__':
     try:
