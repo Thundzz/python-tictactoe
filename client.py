@@ -6,8 +6,7 @@ import string
 
 
 def build_header(header_size, length):
-    h =  str(length).rjust(64, " ")
-    return h
+    return str(length).rjust(64, " ")
 
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 client.connect(("localhost",9000))
