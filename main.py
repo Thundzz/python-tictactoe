@@ -5,7 +5,7 @@ from menu import MenuScreen
 import curses
 import sys
 import time
-from server import Client, Server
+from network import Client, Server
 
 def render_game(gui, game):
     gui.draw_symbol("cursor", game.xc, game.yc)

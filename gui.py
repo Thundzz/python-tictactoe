@@ -74,7 +74,6 @@ class CursesInterface:
         ]
         for line in lines:
             for x, y in line:
-                # print(x, y)
                 self.stdscr.addstr(y, x, "#")
 
     def draw_symbol(self, c, x, y):

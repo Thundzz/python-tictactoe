@@ -16,9 +16,7 @@ class ConnectionHandler:
     def run(self, conn):
         self.conn = conn
         self.conn.setblocking(False)
-        # self.conn.setdefaulttimeout(0)
         while self.running:
-            # print(f"Received {len(self.data)} bytes from client")
             readable, _, _ = select.select([self.conn], [], [], self.select_timeout)
             for conn in readable:
                 try:
@@ -65,7 +63,6 @@ class Server:
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.bind(("0.0.0.0", 9000))
         self.socket.listen(1)
-        # print("Listening to incoming ")
         conn, addr = self.socket.accept()
         self.connection_handler = ConnectionHandler()
         thread = threading.Thread(target=self.connection_handler.run, args=[conn])
@@ -123,19 +120,3 @@ class Client:
 
         if self.connection_thread:
             self.connection_thread.join()
-
-if __name__ == '__main__':
-    try:
-        server = Server()
-        server.start()
-        while True:
-            # print("Polling messages")
-            msgs = server.get_messages()
-            print("hi")
-            if msgs:
-                print(msgs)
-            time.sleep(0.5)
-            # print(msg)
-    finally:
-        server.stop()
-        print("cleanup")
