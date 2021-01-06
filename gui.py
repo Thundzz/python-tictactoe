@@ -25,9 +25,10 @@ class CursesInterface:
 
     def initialize(self):
         curses.curs_set(0)
+        curses.resize_term(36, 120)
         sh, sw = self.stdscr.getmaxyx()
-        while sh <= 40 or sw <= 40:
-            curses.resize_term(100,100)
+        while sh < 36 or sw < 80:
+            curses.resize_term(36, 120)
             self.stdscr.clear()
             sh, sw = self.stdscr.getmaxyx()
             self.stdscr.addstr(0, 0, "Please increase screensize to at least 40x40, current %s %s"% (sh, sw))
