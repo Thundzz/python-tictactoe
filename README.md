@@ -15,9 +15,9 @@ If you're on windows, you can alternatively get a binary from the release page o
 
 ## Screenshots
 
-[menu](img/menu.png)
+![menu](img/menu.png)
 
-[game](img/game.png)
+![game](img/game.png)
 
 ## Dependencies
 
