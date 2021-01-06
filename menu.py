@@ -23,7 +23,7 @@ class MenuScreen:
         for event in events:
             if event in accepted_chars:
                 self.server_ip.append(event)
-            elif event == curses.KEY_BACKSPACE:
+            elif event in { curses.KEY_BACKSPACE, ord('\b'), 127 }:
                 self.server_ip.pop()
             elif event == curses.KEY_DOWN:
                 self.current_idx = (self.current_idx + 1) % len(self.entries)
