@@ -11,14 +11,17 @@ class Game():
         self.finished = False
 
     def update(self, events):
-        xc, yc = self.update_cursor_position(events, self.xc, self.yc)
+        current_player_events = [e for p_id, e in events if p_id == self.currentPlayer]
+        xc, yc = self.update_cursor_position(current_player_events, self.xc, self.yc)
         self.xc = xc
         self.yc = yc
         hasPlayed = False
-        if 10 in events:
+        if 10 in current_player_events:
             hasPlayed = self.play(self.currentPlayer, xc, yc)
-            self.add_message(f"Player {self.currentPlayer} played at ({xc}, {yc})")
-
+            if hasPlayed:
+                self.add_message(f"Player {self.currentPlayer} played at ({xc}, {yc})")
+            else:
+                self.add_message(f"Player {self.currentPlayer} cannot play ({xc}, {yc})")
         if(self.has_won(self.currentPlayer)):
             end_message = "Game is finished. Player %d won !" % self.currentPlayer
             self.finished = True
@@ -31,8 +34,9 @@ class Game():
             self.add_message(end_message)
             self.add_message("Press any key to leave.")
 
-        if hasPlayed:
+        if hasPlayed and not self.finished:
             self.currentPlayer = self.next_player(self.currentPlayer)
+            self.add_message(f"It is now player {self.currentPlayer}'s turn !")
 
     def has_won(self, player):
         for config in self.position_combinations():
